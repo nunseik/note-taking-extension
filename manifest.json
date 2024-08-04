@@ -21,5 +21,14 @@
   },
   "web_accessible_resources": [
     "logo.png"
-  ]
+  ],
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Down",
+        "mac": "Command+Shift+Down"
+      },
+      "description": "Opens Multi-Note Taker"
+    }
+  }
 }
