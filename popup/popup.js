@@ -288,26 +288,29 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Right Panel Functions
+
   function loadNote(id) {
     showLoadingIndicator();
   
     // First, check the cache
-    // if (noteCache.has(id)) {
-    //  const noteData = noteCache.get(id);
-    //  displayNote(noteData);
-    //  hideLoadingIndicator();
-    //  return Promise.resolve();
-    // }
-    
-    // If not in cache, load from storage
+    const cachedNote = noteCache.get(id);
+  
     return browser.storage.local.get(id)
       .then(result => {
-        const noteData = result[id];
-        if (!noteData) {
+        const storedNote = result[id];
+        if (!storedNote) {
           throw new Error('Note not found');
         }
-        addToCache(id, noteData);
-        displayNote(noteData);
+  
+        // If the cached note is present and up-to-date, use it
+        if (cachedNote && cachedNote.lastModified === storedNote.lastModified) {
+          console.log('Using cached note:', id);
+          displayNote(cachedNote);
+        } else {
+          console.log('Using stored note:', id);
+          displayNote(storedNote);
+          addToCache(id, storedNote);
+        }
       })
       .catch(error => {
         console.error('Error loading note:', error);
@@ -380,9 +383,28 @@ document.addEventListener('DOMContentLoaded', function() {
           currentNoteId = newId;
           currentFolder = folderName;
           isNoteDirty = false;
-          if (isNewNote) {
-            addToCache(newId, { id: newId, title: noteTitle, content: noteContent, folder: folderName });
-          }
+    
+          // Fetch the complete saved note data from storage
+          return browser.storage.local.get(newId).then(result => {
+            const savedNote = result[newId];
+            
+            // Ensure all necessary fields are present in the cached data
+            const cacheData = {
+              id: savedNote.id,
+              title: savedNote.title,
+              content: savedNote.content,
+              folder: savedNote.folder,
+              lastModified: savedNote.lastModified,
+              urls: savedNote.urls // Include the urls array
+            };
+    
+            // Add or update the note in the cache
+            addToCache(newId, cacheData);
+    
+            return { newId, folderName, isNewNote };
+          });
+        })
+        .then(({ newId, folderName, isNewNote }) => {
           return batchUpdateUI();
         })
         .catch(error => {
@@ -550,6 +572,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('highlightBlue').addEventListener('click', () => highlight('blue'));
 
   function highlight(color) {
+    editor.focus();
     document.execCommand('removeFormat', false, 'highlight');
     document.execCommand('backColor', false, color === 'yellow' ? '#ffffcc' : color === 'red' ? '#ffcccc' : '#ccf2ff');
     isNoteDirty = true;
