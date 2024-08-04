@@ -64,6 +64,10 @@ document.addEventListener('DOMContentLoaded', function() {
  * - Alt + L: Highlight Blue (changed from 'B' to avoid conflict with Bold)
  * - Arrow Up: Navigate to previous note
  * - Arrow Down: Navigate to next note
+ * - Arrow Right: Move focus to editor
+ * - Arrow Left: Open folders selection
+ * - Alt + D: Delete selected note
+ * - Alt + Enter: Open page associated with selected note
  * 
  * @param {KeyboardEvent} e - The keyboard event
  */
@@ -137,6 +141,46 @@ function handleKeyboardShortcuts(e) {
   else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
     e.preventDefault();
     navigateNotes(e.key === 'ArrowUp' ? 'prev' : 'next');
+  }
+  // Arrow Right: Move focus to editor
+  else if (e.key === 'ArrowRight' && document.activeElement !== editor) {
+    e.preventDefault();
+    editor.focus();
+  }
+
+  // Arrow Left: Open folders selection
+  else if (e.key === 'ArrowLeft' && document.activeElement !== folderSelect) {
+    e.preventDefault();
+    folderSelect.focus();
+  }
+
+  // Alt + D: Delete selected note
+  else if (e.altKey && e.key === 'd') {
+    e.preventDefault();
+    if (currentNoteId) {
+      if (confirm('Are you sure you want to delete this note?')) {
+        deleteNote(currentNoteId);
+      }
+    } else {
+      alert('No note selected');
+    }
+  }
+
+  // Alt + Enter: Open page associated with selected note
+  else if (e.altKey && e.key === 'Enter') {
+    e.preventDefault();
+    if (currentNoteId) {
+      browser.storage.local.get(currentNoteId).then((result) => {
+        const note = result[currentNoteId];
+        if (note && note.urls && note.urls.length > 0) {
+          goToNotePage(note.urls[0]);
+        } else {
+          alert('No URL associated with this note');
+        }
+      });
+    } else {
+      alert('No note selected');
+    }
   }
 }
 
