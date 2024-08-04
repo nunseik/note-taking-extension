@@ -518,9 +518,18 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('underline').addEventListener('click', () => document.execCommand('underline'));
   document.getElementById('h1').addEventListener('click', () => document.execCommand('formatBlock', false, 'h1'));
   document.getElementById('h2').addEventListener('click', () => document.execCommand('formatBlock', false, 'h2'));
-  document.getElementById('highlightYellow').addEventListener('click', () => highlight('yellow'));
+  
+  document.getElementById('highlightYellow').addEventListener('click', (e) => { e.preventDefault(); highlight('yellow'); });
   document.getElementById('highlightRed').addEventListener('click', () => highlight('red'));
   document.getElementById('highlightBlue').addEventListener('click', () => highlight('blue'));
+
+  function highlight(color) {
+    editor.focus();
+    document.execCommand('removeFormat', false, 'highlight');
+    document.execCommand('backColor', false, color === 'yellow' ? '#ffffcc' : color === 'red' ? '#ffcccc' : '#ccf2ff');
+    isNoteDirty = true;
+    debouncedSaveNote();
+  }
 
   // Auto-save Functions
   function startAutoSave() {
