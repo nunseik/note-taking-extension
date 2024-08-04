@@ -247,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
     notesList.querySelectorAll('.note-item').forEach(item => {
       item.classList.toggle('active', item.dataset.id === currentNoteId);
     });
+    console.log('Active note highlighted:', currentNoteId);
   }
 
   function deleteNote(id) {
@@ -291,14 +292,13 @@ document.addEventListener('DOMContentLoaded', function() {
     showLoadingIndicator();
   
     // First, check the cache
-    if (noteCache.has(id)) {
-      const noteData = noteCache.get(id);
-      displayNote(noteData);
-      currentNoteId = id;
-      hideLoadingIndicator();
-      return Promise.resolve();
-    }
-  
+    // if (noteCache.has(id)) {
+    //  const noteData = noteCache.get(id);
+    //  displayNote(noteData);
+    //  hideLoadingIndicator();
+    //  return Promise.resolve();
+    // }
+    
     // If not in cache, load from storage
     return browser.storage.local.get(id)
       .then(result => {
@@ -308,7 +308,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         addToCache(id, noteData);
         displayNote(noteData);
-        currentNoteId = id;
       })
       .catch(error => {
         console.error('Error loading note:', error);
@@ -333,10 +332,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function displayNote(noteData) {
     currentNoteId = noteData.id;
-    editor.innerHTML = noteData.content;
-    titleInput.value = noteData.title || '';
-    highlightActiveNote();
-    isNoteDirty = false;
+    
+    // Clear the editor first
+    editor.innerHTML = '';
+    
+    // Use a setTimeout to ensure the DOM has time to clear
+    setTimeout(() => {
+      editor.innerHTML = noteData.content;
+      titleInput.value = noteData.title || '';
+      
+      // Force a redraw of the editor
+      editor.style.display = 'none';
+      editor.offsetHeight; // This line triggers a reflow
+      editor.style.display = '';
+  
+      highlightActiveNote();
+      isNoteDirty = false;
+      
+      console.log('Note displayed:', noteData.id, 'Content:', editor.innerHTML);
+    }, 0);
   }
 
   function updateCurrentContext() {
@@ -509,6 +523,18 @@ document.addEventListener('DOMContentLoaded', function() {
     debouncedSaveNote();
   });
 
+  notesList.addEventListener('click', function(e) {
+    const noteItem = e.target.closest('.note-item');
+    if (noteItem) {
+      const id = noteItem.dataset.id;
+      if (id !== currentNoteId) {
+        saveNote().then(() => {
+          loadNote(id);
+        });
+      }
+    }
+  });
+
 
   // Toolbar Event Listeners
   // Toolbar buttons
@@ -519,12 +545,11 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('h1').addEventListener('click', () => document.execCommand('formatBlock', false, 'h1'));
   document.getElementById('h2').addEventListener('click', () => document.execCommand('formatBlock', false, 'h2'));
   
-  document.getElementById('highlightYellow').addEventListener('click', (e) => { e.preventDefault(); highlight('yellow'); });
+  document.getElementById('highlightYellow').addEventListener('click', () => highlight('yellow'));
   document.getElementById('highlightRed').addEventListener('click', () => highlight('red'));
   document.getElementById('highlightBlue').addEventListener('click', () => highlight('blue'));
 
   function highlight(color) {
-    editor.focus();
     document.execCommand('removeFormat', false, 'highlight');
     document.execCommand('backColor', false, color === 'yellow' ? '#ffffcc' : color === 'red' ? '#ffcccc' : '#ccf2ff');
     isNoteDirty = true;
