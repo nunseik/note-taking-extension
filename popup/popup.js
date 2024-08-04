@@ -45,6 +45,174 @@ document.addEventListener('DOMContentLoaded', function() {
   const NOTE_CACHE_SIZE = 20;
   const noteCache = new Map();
 
+  // Add the keyboard shortcuts event listener here
+  document.addEventListener('keydown', handleKeyboardShortcuts);
+
+  /**
+ * Handles keyboard shortcuts for the extension.
+ * 
+ * Shortcuts:
+ * - Alt + S: Save note
+ * - Alt + N: New note
+ * - Alt + B: Bold
+ * - Alt + I: Italic
+ * - Alt + U: Underline
+ * - Alt + 1: Heading 1
+ * - Alt + 2: Heading 2
+ * - Alt + Y: Highlight Yellow
+ * - Alt + R: Highlight Red
+ * - Alt + L: Highlight Blue (changed from 'B' to avoid conflict with Bold)
+ * - Arrow Up: Navigate to previous note
+ * - Arrow Down: Navigate to next note
+ * 
+ * @param {KeyboardEvent} e - The keyboard event
+ */
+function handleKeyboardShortcuts(e) {
+  // Check if the focused element is an input field
+  if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+    return; // Don't interfere with normal input field behavior
+  }
+
+  // Alt + S: Save note
+  if (e.altKey && e.key === 's') {
+    e.preventDefault();
+    saveNote();
+  }
+  
+  // Alt + N: New note
+  else if (e.altKey && e.key === 'n') {
+    e.preventDefault();
+    newNote();
+  }
+  
+  // Alt + B: Bold
+  else if (e.altKey && e.key === 'b') {
+    e.preventDefault();
+    document.execCommand('bold');
+  }
+  
+  // Alt + I: Italic
+  else if (e.altKey && e.key === 'i') {
+    e.preventDefault();
+    document.execCommand('italic');
+  }
+  
+  // Alt + U: Underline
+  else if (e.altKey && e.key === 'u') {
+    e.preventDefault();
+    document.execCommand('underline');
+  }
+  
+  // Alt + 1: Heading 1
+  else if (e.altKey && e.key === '1') {
+    e.preventDefault();
+    document.execCommand('formatBlock', false, 'h1');
+  }
+  
+  // Alt + 2: Heading 2
+  else if (e.altKey && e.key === '2') {
+    e.preventDefault();
+    document.execCommand('formatBlock', false, 'h2');
+  }
+  
+  // Alt + Y: Highlight Yellow
+  else if (e.altKey && e.key === 'y') {
+    e.preventDefault();
+    highlight('yellow');
+  }
+  
+  // Alt + R: Highlight Red
+  else if (e.altKey && e.key === 'r') {
+    e.preventDefault();
+    highlight('red');
+  }
+  
+  // Alt + L: Highlight Blue (changed from 'B' to avoid conflict with Bold)
+  else if (e.altKey && e.key === 'l') {
+    e.preventDefault();
+    highlight('blue');
+  }
+
+  // Arrow Up/Down: Navigate between notes (no changes needed here)
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    navigateNotes(e.key === 'ArrowUp' ? 'prev' : 'next');
+  }
+}
+
+  /**
+   * Navigates through the list of notes.
+   * Use Arrow Up key to go to the previous note.
+   * Use Arrow Down key to go to the next note.
+   * 
+   * @param {string} direction - The direction to navigate: 'prev' or 'next'
+   */
+  function navigateNotes(direction) {
+    const noteItems = Array.from(notesList.querySelectorAll('.note-item'));
+    const currentIndex = noteItems.findIndex(item => item.classList.contains('active'));
+    let newIndex;
+
+    if (direction === 'prev') {
+      newIndex = currentIndex > 0 ? currentIndex - 1 : noteItems.length - 1;
+    } else {
+      newIndex = currentIndex < noteItems.length - 1 ? currentIndex + 1 : 0;
+    }
+
+    const newNoteItem = noteItems[newIndex];
+    if (newNoteItem) {
+      switchToNote(newNoteItem.dataset.id);
+    }
+  }
+
+  /**
+   * Switches to a new note, saving the current note first.
+   * This function is called when navigating between notes.
+   * 
+   * @param {string} newNoteId - The ID of the note to switch to
+   */
+  function switchToNote(newNoteId) {
+    if (newNoteId !== currentNoteId) {
+      saveNote()
+        .then(() => loadNote(newNoteId))
+        .then(() => {
+          updateActiveNoteVisual(newNoteId);
+          scrollNoteIntoView(newNoteId);
+        })
+        .catch(error => {
+          console.error('Error switching notes:', error);
+          showErrorMessage('Failed to switch notes. Please try again.');
+        });
+    }
+  }
+
+  /**
+   * Updates the visual indication of the active note in the list.
+   * 
+   * @param {string} newNoteId - The ID of the new active note
+   */
+  function updateActiveNoteVisual(newNoteId) {
+    notesList.querySelectorAll('.note-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.id === newNoteId);
+    });
+  }
+
+  /**
+   * Scrolls the newly active note into view in the notes list.
+   * 
+   * @param {string} noteId - The ID of the note to scroll into view
+   */
+  function scrollNoteIntoView(noteId) {
+    const noteElement = notesList.querySelector(`.note-item[data-id="${noteId}"]`);
+    if (noteElement) {
+      noteElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+  newButton.setAttribute('tabindex', '1');
+  titleInput.setAttribute('tabindex', '2');
+  editor.setAttribute('tabindex', '3');
+  saveButton.setAttribute('tabindex', '4');
+  folderSelect.setAttribute('tabindex', '5');
+
   initializeExtension();
 
   function initializeExtension() {
@@ -424,6 +592,10 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCurrentContext().then(() => {
       folderSelect.value = currentFolder;
       updateFolderControls();
+
+      // Focus on the title input and select any existing text
+      titleInput.focus();
+      titleInput.select();
     });
   }
 
@@ -519,6 +691,23 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Event Listeners
+
+  // Add event listener for tab key on title input
+  titleInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      editor.focus();
+    }
+  });
+
+  // Add event listener for shift+tab key on editor
+  editor.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault();
+      titleInput.focus();
+    }
+  });
+
   newButton.addEventListener('click', newNote);
   saveButton.addEventListener('click', function() {
     saveNote();
@@ -556,7 +745,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
-
 
   // Toolbar Event Listeners
   // Toolbar buttons

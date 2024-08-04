@@ -8,9 +8,9 @@
 <body>
   <div class="container">
     <div id="loadingIndicator" class="indicator">Loading...</div>
-<div id="errorDisplay" class="indicator">Error message will appear here</div>
+    <div id="errorDisplay" class="indicator">Error message will appear here</div>
     <div class="left-panel">
-      <button id="newButton" class="new-note-btn ripple"><i class="fas fa-plus"></i> New Note</button>
+      <button id="newButton" class="new-note-btn ripple" title="New Note (Alt+N)"><i class="fas fa-plus"></i> New Note</button>
       <div class="folder-controls">
         <select id="folderSelect" class="folder-select">
           <option value="all">All Notes</option>
@@ -23,20 +23,20 @@
         <a href="https://www.classcentral.com/" target="_blank">
           <img src="../logo.png" alt="Class Central" class="cc-logo">
         </a>
-    </div>
+      </div>
     </div>
     <div class="right-panel">
       <input type="text" id="noteTitle" placeholder="Note Title" class="note-title">
       <div id="toolbar" class="toolbar">
         <button id="normal" title="Normal Text"><i class="fas fa-paragraph ripple"></i></button>
-        <button id="bold" title="Bold"><i class="fas fa-bold ripple"></i></button>
-        <button id="italic" title="Italic"><i class="fas fa-italic ripple"></i></button>
-        <button id="underline" title="Underline"><i class="fas fa-underline ripple"></i></button>
-        <button id="h1" title="Heading 1" class="ripple">H1</button>
-        <button id="h2" title="Heading 2" class="ripple">H2</button>
-        <button id="highlightYellow" title="Highlight Yellow" class="highlight-btn yellow ripple"><i class="fas fa-paint-brush"></i></button>
-        <button id="highlightRed" title="Highlight Red" class="highlight-btn red ripple"><i class="fas fa-paint-brush"></i></button>
-        <button id="highlightBlue" title="Highlight Blue" class="highlight-btn blue ripple"><i class="fas fa-paint-brush"></i></button>
+        <button id="bold" title="Bold (Alt+B)"><i class="fas fa-bold ripple"></i></button>
+        <button id="italic" title="Italic (Alt+I)"><i class="fas fa-italic ripple"></i></button>
+        <button id="underline" title="Underline (Alt+U)"><i class="fas fa-underline ripple"></i></button>
+        <button id="h1" title="Heading 1 (Alt+1)" class="ripple">H1</button>
+        <button id="h2" title="Heading 2 (Alt+2)" class="ripple">H2</button>
+        <button id="highlightYellow" title="Highlight Yellow (Alt+Y)" class="highlight-btn yellow ripple"><i class="fas fa-paint-brush"></i></button>
+        <button id="highlightRed" title="Highlight Red (Alt+R)" class="highlight-btn red ripple"><i class="fas fa-paint-brush"></i></button>
+        <button id="highlightBlue" title="Highlight Blue (Alt+L)" class="highlight-btn blue ripple"><i class="fas fa-paint-brush"></i></button>
       </div>
       <div id="editor" contenteditable="true" class="editor"></div>
       <div class="button-container">
@@ -48,7 +48,7 @@
           </select>
           <button id="exportButton" class="export-btn ripple">Export Note</button>
         </div>
-        <button id="saveButton" class="save-btn ripple">Save Note</button>
+        <button id="saveButton" class="save-btn ripple" title="Save Note (Alt+S)">Save Note</button>
       </div>
     </div>
   </div>
