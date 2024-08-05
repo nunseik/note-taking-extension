@@ -792,7 +792,12 @@ function handleKeyboardShortcuts(e) {
 
   // Toolbar Event Listeners
   // Toolbar buttons
-  document.getElementById('normal').addEventListener('click', () => document.execCommand('formatBlock', false, 'p'));
+  document.getElementById('normal').addEventListener('click', () => {
+    document.execCommand('removeFormat', false, 'backColor');
+    document.execCommand('formatBlock', false, 'p');
+    isNoteDirty = true;
+    debouncedSaveNote();
+  });
   document.getElementById('bold').addEventListener('click', () => document.execCommand('bold'));
   document.getElementById('italic').addEventListener('click', () => document.execCommand('italic'));
   document.getElementById('underline').addEventListener('click', () => document.execCommand('underline'));
