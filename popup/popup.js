@@ -589,12 +589,23 @@ function handleKeyboardShortcuts(e) {
       const noteContent = editor.innerHTML;
       const noteTitle = titleInput.value;
     
-      return (currentFolder && currentUrl ? Promise.resolve() : updateCurrentContext())
-        .then(() => saveNoteToStorage(currentFolder, noteContent, noteTitle, currentUrl))
-        .then(({ newId, folderName, isNewNote }) => {
-          currentNoteId = newId;
-          currentFolder = folderName;
-          isNoteDirty = false;
+      // NEW: First, get the existing note data (if any)
+      return browser.storage.local.get(currentNoteId)
+      .then(result => {
+        const existingNote = result[currentNoteId];
+        
+        // NEW: Use the existing note's folder if available, otherwise use currentFolder
+        const folderToUse = existingNote ? existingNote.folder : currentFolder;
+        
+        // NEW: Use the existing note's first URL if available, otherwise use currentUrl
+        const urlToUse = existingNote ? existingNote.urls[0] : currentUrl;
+
+        // CHANGED: Pass folderToUse and urlToUse instead of currentFolder and currentUrl
+        return saveNoteToStorage(folderToUse, noteContent, noteTitle, urlToUse);
+      })
+      .then(({ newId, folderName, isNewNote }) => {
+        currentNoteId = newId;
+        isNoteDirty = false;
     
           // Fetch the complete saved note data from storage
           return browser.storage.local.get(newId).then(result => {
@@ -667,16 +678,17 @@ function handleKeyboardShortcuts(e) {
           id: noteId,
           title: title || 'Untitled',
           content: content,
-          folder: folderName,
+          folder: folderName, // This now uses the passed folderName, which preserves the original folder
           lastModified: Date.now(),
           urls: isNewNote ? [url] : (result[noteId]?.urls || [])
         };
   
-        // If it's an existing note, update the URL if it's new
+        // CHANGED: Only add the new URL if it's not already in the list
         if (!isNewNote && !noteData.urls.includes(url)) {
           noteData.urls.push(url);
         }
-  
+
+        // Ensure the folder exists in the folders object
         if (!folders[folderName]) {
           folders[folderName] = { name: folderName };
         }
